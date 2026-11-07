@@ -1,0 +1,10 @@
+node_modules/
+.venv/
+data/
+__pycache__/
+*.pyc
+*.log
+.env
+docs/check-*
+public/recording-check.html
+public/recording-check.js

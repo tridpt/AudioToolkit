@@ -1,0 +1,32 @@
+{
+  "name": "audio-toolkit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Audio Toolkit — local audio cleanup, transcript, speaker separation and timestamp notes.",
+  "scripts": {
+    "dev": "node --watch server/index.mjs",
+    "start": "node server/index.mjs",
+    "setup:ai": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup-ai.ps1",
+    "demo": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/create-demo.ps1",
+    "test": "node --test tests/*.test.mjs",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "type": "module",
+  "dependencies": {
+    "@ffprobe-installer/ffprobe": "^2.1.2",
+    "@fontsource/be-vietnam-pro": "^5.2.6",
+    "docx": "^9.14.0",
+    "express": "^5.1.0",
+    "ffmpeg-static": "^5.2.0",
+    "fontkit": "^2.0.4",
+    "jszip": "^3.10.2",
+    "multer": "^2.0.2",
+    "pdfkit": "^0.16.0",
+    "yauzl": "^3.4.0",
+    "yazl": "^3.3.1",
+    "zod": "^4.6.7"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,0 +1,43 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { promises as fs } from 'node:fs';
+import ffmpeg from 'ffmpeg-static';
+import ffprobe from '@ffprobe-installer/ffprobe';
+
+const base = process.env.AUDIO_URL || 'http://127.0.0.1:4188';
+const directory = 'data/checks/recordings';
+await fs.mkdir(directory, { recursive: true });
+const streamed = seconds => execFileSync(ffmpeg, ['-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=48000', '-t', String(seconds), '-c:a', 'libopus', '-live', '1', '-f', 'webm', 'pipe:1'], { windowsHide: true, maxBuffer: 2 * 1024 * 1024 });
+const file = process.argv[2] ? await fs.readFile(process.argv[2]) : streamed(2.4);
+const source = `${directory}/streamed.webm`;
+await fs.writeFile(source, file);
+const probe = JSON.parse(execFileSync(ffprobe.path, ['-v', 'error', '-show_format', '-of', 'json', source], { windowsHide: true }));
+assert.equal(probe.format.duration, undefined, 'This check needs a streaming WebM with no declared duration.');
+async function upload(bytes, name) {
+  const form = new FormData(); form.append('audio', new Blob([bytes], { type: 'audio/webm' }), name);
+  const response = await fetch(`${base}/api/projects`, { method: 'POST', body: form });
+  return { status: response.status, body: await response.json() };
+}
+const result = await upload(file, 'Kiểm tra thu âm — tín hiệu tổng hợp.webm');
+assert.equal(result.status, 201, JSON.stringify(result.body));
+const project = result.body;
+assert.ok(project.duration >= .5 && project.duration <= 7200);
+if (!process.argv[2]) assert.ok(Math.abs(project.duration - 2.4) < .03);
+assert.ok(project.metrics.peaks.length > 10);
+assert.equal(project.transcript.length, 0);
+assert.equal(project.notes.length, 0);
+const playback = await fetch(base + project.audioUrl);
+assert.equal(playback.status, 200);
+const target = `${directory}/playback.mp3`;
+await fs.writeFile(target, Buffer.from(await playback.arrayBuffer()));
+const media = JSON.parse(execFileSync(ffprobe.path, ['-v', 'error', '-show_format', '-of', 'json', target], { windowsHide: true }));
+assert.ok(Math.abs(Number(media.format.duration) - project.duration) < .1);
+const original = await fetch(`${base}/api/projects/${project.id}/audio/download`);
+assert.deepEqual(Buffer.from(await original.arrayBuffer()), file, 'The captured original must be preserved byte for byte.');
+const range = await fetch(base + project.audioUrl, { headers: { Range: 'bytes=0-99' } });
+assert.equal(range.status, 206);
+const before = await (await fetch(`${base}/api/projects`)).json();
+assert.equal((await upload(streamed(.1), 'too-short.webm')).status, 400);
+assert.equal((await upload(Buffer.from('invalid recording'), 'invalid.webm')).status, 400);
+assert.deepEqual(await (await fetch(`${base}/api/projects`)).json(), before, 'Rejected captures must not create projects.');
+console.log(JSON.stringify({ result: 'passed', projectId: project.id, duration: project.duration, checked: ['streaming WebM without duration', 'playback duration', 'waveform', 'unchanged original', 'HTTP Range', 'short and invalid files'] }, null, 2));

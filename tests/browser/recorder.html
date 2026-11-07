@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kiểm tra thu âm — Audio Toolkit</title><link rel="stylesheet" href="/styles.css"></head>
+<body style="padding:24px;max-width:850px;margin:auto">
+  <h1 style="font-size:24px">Kiểm tra thu âm bằng tín hiệu tổng hợp</h1>
+  <p class="modal-copy">Dùng MediaRecorder thật của trình duyệt với âm sin 440 Hz. Trang này không truy cập micro. Nguồn tổng hợp không phát trực tiếp ra loa; nút nghe lại sẽ phát tín hiệu đã thu.</p>
+  <label class="field-label" for="fixtureMode">Nguồn kiểm tra</label><select class="modal-input" id="fixtureMode"><option value="signal">Âm thanh tổng hợp</option><option value="denied">Từ chối quyền micro</option></select>
+  <p><label><input type="checkbox" id="fixtureFailSave" checked> Giả lập lỗi lưu</label></p>
+  <p><label><input type="checkbox" id="fixtureFailOpen"> Giả lập lỗi mở dự án sau khi lưu</label></p>
+  <button class="button primary" id="fixtureOpen">Mở trình thu âm kiểm tra</button>
+  <pre id="fixtureStatus" style="white-space:pre-wrap;font-size:12px;line-height:1.8"></pre>
+  <dialog class="modal wide-modal recording-modal" id="recordingModal" aria-labelledby="recordingTitle"></dialog>
+  <script type="module" src="./recording-check.js"></script>
+</body></html>

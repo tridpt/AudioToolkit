@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101426" />
+    <meta
+      name="description"
+      content="Audio Toolkit — làm sạch bản thu, tạo transcript, tách người nói và ghi chú theo mốc thời gian."
+    />
+    <title>Audio Toolkit — phòng xử lý bản thu</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Điều hướng chính">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </div>
+          <div>
+            <p class="brand-name">audio<span>kit</span></p>
+            <p class="brand-caption">WORKSPACE</p>
+          </div>
+        </div>
+
+        <div class="workspace-switcher">
+          <div class="workspace-avatar">P</div>
+          <div class="workspace-copy">
+            <strong>Podcast Lab</strong>
+            <span>Không gian cá nhân</span>
+          </div>
+        </div>
+
+        <p class="nav-label">Workspace</p>
+        <nav class="side-nav">
+          <button class="nav-item active" data-nav="projects" aria-label="Dự án của tôi">
+            <span class="nav-icon" data-icon="folder"></span><span>Dự án của tôi</span><b>0</b>
+          </button>
+          <button class="nav-item" data-nav="recordings" aria-label="Bản thu gần đây">
+            <span class="nav-icon" data-icon="clock"></span><span>Bản thu gần đây</span>
+          </button>
+          <button class="nav-item" data-nav="exports" aria-label="Đã xuất">
+            <span class="nav-icon" data-icon="download"></span><span>Đã xuất</span>
+          </button>
+        </nav>
+
+        <p class="nav-label nav-label-spaced">Công cụ</p>
+        <nav class="side-nav">
+          <button class="nav-item" data-nav="batch" aria-label="Xử lý hàng loạt"><span class="nav-icon" data-icon="wave"></span><span>Xử lý hàng loạt</span></button>
+          <button class="nav-item" data-nav="backup" aria-label="Sao lưu & khôi phục"><span class="nav-icon" data-icon="shield"></span><span>Sao lưu & khôi phục</span></button>
+          <button class="nav-item" data-nav="templates" aria-label="Mẫu ghi chú">
+            <span class="nav-icon" data-icon="templates"></span><span>Mẫu ghi chú</span>
+          </button>
+          <button class="nav-item" data-nav="settings" aria-label="Cài đặt">
+            <span class="nav-icon" data-icon="settings"></span><span>Cài đặt</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-spacer"></div>
+        <div class="privacy-card">
+          <div class="privacy-icon" data-icon="shield"></div>
+          <div>
+            <strong>Xử lý riêng tư</strong>
+            <p>File của bạn chỉ được lưu trên thiết bị này.</p>
+          </div>
+        </div>
+        <div class="profile-row">
+          <div class="profile-avatar">PL</div>
+          <div class="profile-copy"><strong>Podcast Lab</strong><span>Workspace cục bộ</span></div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div class="breadcrumbs"><span>Podcast Lab</span><i>/</i><strong>Phỏng vấn</strong></div>
+          <div class="topbar-actions">
+            <button class="help-button" title="Phím tắt">?</button>
+            <span class="connection-state" id="connectionState">Đang kết nối…</span>
+            <span class="job-indicator" id="jobIndicator" hidden>Đang xử lý</span>
+            <button class="topbar-bell" aria-label="Trạng thái tác vụ"><span class="bell-icon" data-icon="bell"></span></button>
+            <span class="topbar-avatar" title="Workspace cục bộ">PL</span>
+          </div>
+        </header>
+
+        <div class="page-wrap">
+          <section class="page-heading">
+            <div>
+              <p class="eyebrow"><span class="eyebrow-dot"></span> AUDIO TOOLKIT</p>
+              <h1>Từ bản thu. <span>Đến ý tưởng.</span></h1>
+              <p class="heading-subtitle">Làm sạch âm thanh, hiểu cuộc trò chuyện và lưu lại những điều quan trọng.</p>
+            </div>
+            <div class="heading-actions">
+              <button class="button secondary batch-queue-button" id="batchQueueButton" hidden>Hàng đợi <b id="batchQueueCount">0</b></button>
+              <button class="button record-button" id="recordButton"><span data-icon="mic"></span> Thu âm</button>
+              <button class="button secondary" id="importButton" title="Chọn một hoặc nhiều file âm thanh"><span class="button-symbol">＋</span> Nhập file mới</button>
+              <input id="fileInput" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.webm" multiple hidden />
+            </div>
+          </section>
+
+          <div class="demo-notice" id="demoNotice" hidden><span><b>Khám phá với bản thu mẫu</b> <span>2 giọng tổng hợp · phát thử và thêm ghi chú ngay.</span></span><button id="demoTryButton">Chạy AI với mẫu <span>↗</span></button></div>
+          <div class="upload-status" id="uploadStatus" role="status" hidden>Đang nhập và chuẩn hoá âm thanh… File lớn có thể cần một chút thời gian.</div>
+          <section class="workspace-grid">
+            <div class="primary-column">
+              <section class="audio-card" id="audioCard" data-project-surface inert>
+                <div class="audio-card-topline">
+                  <div class="file-heading">
+                    <div class="file-type-icon" data-icon="wave"></div>
+                    <div>
+                      <p class="source-label" id="sourceLabel">PHÒNG XỬ LÝ BẢN THU</p>
+                      <div class="file-name-row"><h2 id="fileName">Đang mở workspace…</h2><button class="saved-badge" aria-live="polite" title="Trạng thái lưu · nhấn để thử lưu lại khi lỗi"><span></span> Đã lưu</button></div>
+                      <p id="fileMeta">Âm thanh của bạn, xử lý trên máy của bạn.</p>
+                    </div>
+                  </div>
+                  <button class="icon-button more-button" id="fileOptionsButton" aria-label="Tuỳ chọn file" title="Tuỳ chọn file">•••</button>
+                </div>
+
+                <div class="audio-visualizer" id="waveformShell" role="slider" tabindex="0" aria-label="Vị trí phát trong bản thu" aria-valuemin="0" aria-valuemax="0" aria-valuenow="0">
+                  <canvas id="waveform" aria-label="Dạng sóng âm thanh, nhấn để tua"></canvas>
+                  <div class="waveform-time current" id="currentTime">00:00</div>
+                  <div class="waveform-time end" id="endTime">00:00</div>
+                  <div class="waveform-marker" id="waveformMarker" aria-hidden="true"></div>
+                </div>
+
+                <audio id="audioElement" preload="metadata"></audio>
+                <div class="transport-row">
+                  <div class="transport-left">
+                    <button class="transport-button skip" id="backButton" aria-label="Lùi 15 giây" title="Lùi 15 giây">↶<small>15</small></button>
+                    <button class="play-button" id="playButton" aria-label="Phát" title="Phát / dừng"><span id="playIcon" data-icon="play"></span></button>
+                    <button class="transport-button skip" id="forwardButton" aria-label="Tiến 15 giây" title="Tiến 15 giây">↷<small>15</small></button>
+                    <span class="transport-time"><strong id="transportCurrent">00:00</strong><span>/</span><span id="transportDuration">00:00</span></span>
+                  </div>
+                  <div class="transport-right">
+                    <button class="audio-variant" id="audioVariant" title="Chuyển qua lại để nghe so sánh">Bản gốc</button>
+                    <button class="volume-button" id="volumeButton" aria-label="Bật tắt tiếng" data-icon="volume"></button>
+                    <input class="volume-range" id="volumeRange" type="range" min="0" max="1" step="0.05" value="0.8" aria-label="Âm lượng" />
+                    <button class="speed-button" id="speedButton" title="Tốc độ phát">1×</button>
+                  </div>
+                </div>
+
+                <div class="processing-divider"></div>
+                <div class="processing-row">
+                  <div class="processing-title"><span class="sparkle">✦</span><div><strong>Xử lý AI</strong><span id="processingSummary">Đang mở bản thu…</span></div></div>
+                  <div class="processing-actions">
+                    <button class="process-pill" id="noiseButton"><span class="pill-check">○</span><span>Lọc tiếng ồn</span><i class="pill-info" title="Giảm tiếng quạt, điều hoà và nền ồn">i</i></button>
+                    <button class="process-pill" id="transcriptButton"><span class="pill-check">○</span><span>Transcript</span></button>
+                    <button class="process-pill" id="speakerButton"><span class="pill-check">○</span><span>Tách người nói</span></button>
+                  </div>
+                  <button class="button process-all" id="processAllButton">Xử lý tất cả <span>↗</span></button>
+                </div>
+                <div class="process-settings-row"><span>FFmpeg · Whisper · Speaker Diarization</span><div><button id="cancelJobButton" hidden>Huỷ tác vụ</button><button id="processingSettingsButton">Tuỳ chỉnh <span data-icon="settings"></span></button></div></div>
+                <div class="processing-progress" id="processingProgress" hidden><span></span></div>
+              </section>
+
+              <section class="transcript-card" id="transcriptCard" data-project-surface inert>
+                <div class="card-heading-row">
+                  <div class="tab-list" role="tablist" aria-label="Nội dung dự án">
+                    <button class="tab active" id="transcriptTab" data-tab="transcript" role="tab" aria-selected="true" aria-controls="transcriptList">Transcript <span class="tab-count">0</span></button>
+                    <button class="tab" id="summaryTab" data-tab="summary" role="tab" aria-selected="false" aria-controls="insightsView">Tóm tắt <span class="summary-dot" id="summaryDot" hidden></span></button>
+                    <button class="tab" id="notesTab" data-tab="notes" role="tab" aria-selected="false" aria-controls="notesView">Ghi chú <span class="tab-count" id="notesCount">0</span></button>
+                  </div>
+                  <div class="transcript-actions">
+                    <button class="small-action" id="importTranscriptButton" aria-label="Nhập transcript SRT/VTT" title="Nhập transcript SRT/VTT"><i data-icon="upload"></i><span>Nhập phụ đề</span></button>
+                    <button class="small-action" id="searchTranscriptButton" aria-label="Tìm trong transcript"><i data-icon="search"></i><span>Tìm kiếm</span></button>
+                    <button class="small-action clip-action" id="selectClipButton" aria-label="Cắt clip từ transcript" title="Cắt clip từ transcript"><i data-icon="scissors"></i><span>Cắt clip</span></button>
+                    <button class="small-action" id="exportButton" aria-label="Xuất nội dung"><i data-icon="download"></i><span>Xuất</span></button>
+                  </div>
+                </div>
+
+                <div class="transcript-toolbar" id="transcriptToolbar">
+                  <div class="transcript-language"><span class="language-flag">--</span><span>Chưa nhận diện</span></div>
+                  <div class="speaker-filters" id="speakerFilters" aria-label="Lọc người nói"></div>
+                  <label class="confidence-toggle"><input type="checkbox" id="confidenceToggle" checked /><span class="toggle-track"></span><span>Hiện độ tin cậy</span></label>
+                </div>
+                <div class="search-row" id="searchRow" hidden><span>⌕</span><input id="transcriptSearch" type="search" placeholder="Tìm từ khoá trong transcript..." /><button id="clearSearch" aria-label="Xoá tìm kiếm">×</button></div>
+                <div class="clip-selection-bar" id="clipSelectionBar" hidden>
+                  <div><strong id="clipSelectionSummary" aria-live="polite">Chọn đoạn đầu và đoạn cuối</strong><p>Nhấn dấu chọn ở đoạn đầu, rồi đoạn cuối. Mọi đoạn và khoảng nghỉ ở giữa sẽ được giữ.</p></div>
+                  <div class="clip-selection-actions"><button class="text-button" id="clipResetSelection">Chọn lại</button><button class="button primary" id="clipReviewButton" disabled>Nghe & cắt</button><button class="clip-cancel" id="clipCancelSelection" aria-label="Huỷ chọn clip">×</button></div>
+                </div>
+                <div class="transcript-list" id="transcriptList" role="list"></div>
+                <div class="insights-view" id="insightsView" role="tabpanel" aria-labelledby="summaryTab" hidden></div>
+                <div class="notes-view" id="notesView" role="tabpanel" aria-labelledby="notesTab" hidden></div>
+                <div class="transcript-footer" id="transcriptFooter"><span><span class="status-dot"></span> Transcript được tạo cục bộ</span><div class="transcript-footer-actions"><button class="text-button" id="historyButton">Lịch sử phiên bản</button><button class="text-button" id="editTranscriptButton">Chỉnh sửa transcript <span>→</span></button></div></div>
+              </section>
+            </div>
+
+            <aside class="insights-column" data-project-surface inert>
+              <section class="insight-card note-card">
+                <div class="insight-heading"><div><p class="card-kicker">GHI CHÚ NHANH</p><h2>Bắt đúng ý hay</h2></div><button class="icon-button light" id="openNotesTab" aria-label="Mở tất cả ghi chú">↗</button></div>
+                <p class="insight-description">Ghi lại suy nghĩ khi đang nghe. Mỗi ghi chú sẽ được gắn với vị trí hiện tại.</p>
+                <div class="note-composer">
+                  <div class="note-time-chip" id="noteTimeChip">00:00</div>
+                  <input id="noteInput" type="text" maxlength="2000" placeholder="Thêm một ghi chú..." aria-label="Nội dung ghi chú" />
+                  <button class="add-note-button" id="addNoteButton" aria-label="Thêm ghi chú">＋</button>
+                </div>
+                <div class="quick-notes-list" id="quickNotesList"></div>
+                <button class="view-all-button" id="viewAllNotesButton">Xem tất cả ghi chú <span>→</span></button>
+              </section>
+
+              <section class="insight-card people-card">
+                <div class="insight-heading"><div><p class="card-kicker">TÁCH NGƯỜI NÓI</p><h2>Cuộc trò chuyện</h2></div><span class="detected-badge">Đã nhận diện</span></div>
+                <div class="speaker-list" id="speakerList"></div>
+                <button class="add-speaker-button" id="addSpeakerButton"><span>＋</span> Thêm người nói</button>
+              </section>
+
+              <section class="insight-card quality-card">
+                <div class="quality-top"><div><p class="card-kicker">TÍN HIỆU BẢN GỐC</p><h2>Đỉnh âm lượng</h2></div><div class="quality-score"><strong id="qualityValue">—</strong><span>dBFS</span></div></div>
+                <div class="quality-meter"><span></span></div>
+                <div class="quality-meta"><span id="qualityDetail">Đang phân tích…</span></div><p class="quality-footnote" id="noiseStatus">Chưa có bản lọc ồn</p>
+              </section>
+
+              <div class="export-card">
+                <div class="export-icon">↥</div>
+                <div><strong>Sẵn sàng chia sẻ?</strong><p>Xuất transcript và ghi chú thành một file.</p></div>
+                <button class="export-link" id="exportQuickButton" aria-label="Xuất file">→</button>
+              </div>
+            </aside>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <div class="drop-overlay" id="dropOverlay" hidden><div class="drop-overlay-inner"><span>↥</span><strong>Thả bản thu vào đây</strong><small>MP3, WAV, M4A, FLAC hoặc OGG</small></div></div>
+    <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+
+    <dialog class="modal wide-modal recording-modal" id="recordingModal" aria-labelledby="recordingTitle"></dialog>
+
+    <dialog class="modal report-export-modal" id="exportModal" aria-labelledby="exportTitle">
+      <div class="modal-header"><div><p class="card-kicker">XUẤT NỘI DUNG</p><h2 id="exportTitle">Xuất nội dung bản thu</h2></div><button class="modal-close" data-close-modal="exportModal" aria-label="Đóng">×</button></div>
+      <p class="modal-copy">Báo cáo DOCX / PDF gồm thông tin bản thu, tóm tắt, chương, ý chính, transcript theo người nói và ghi chú có mốc thời gian.</p>
+      <div class="report-profile-field"><label class="field-label" for="reportLayout">Mẫu báo cáo DOCX / PDF</label><select class="modal-input" id="reportLayout"><option value="podcast">Podcast · chương và trích dẫn</option><option value="lesson">Bài giảng · ý chính và ghi chú</option><option value="interview">Phỏng vấn · hội thoại theo người nói</option></select></div>
+      <p class="report-content-state" id="reportContentState"></p>
+      <div class="export-options"><button class="export-option" data-report="docx"><span class="export-option-icon docx">DOCX</span><span><strong>Báo cáo chỉnh sửa được</strong><small>Word, giữ bố cục và tiếng Việt (.docx)</small></span><b>→</b></button><button class="export-option" data-report="pdf"><span class="export-option-icon pdf">PDF</span><span><strong>Báo cáo để chia sẻ</strong><small>Bản dàn trang sẵn để đọc và in (.pdf)</small></span><b>→</b></button><button class="export-option" data-export="txt"><span class="export-option-icon">TXT</span><span><strong>Tóm tắt + transcript + ghi chú</strong><small>Văn bản có mốc thời gian (.txt)</small></span><b>→</b></button><button class="export-option" data-export="srt"><span class="export-option-icon">SRT</span><span><strong>Phụ đề có tên người nói</strong><small>Tương thích phần mềm dựng video (.srt)</small></span><b>→</b></button><button class="export-option" data-export="vtt"><span class="export-option-icon">VTT</span><span><strong>Phụ đề cho web</strong><small>WebVTT (.vtt)</small></span><b>→</b></button><button class="export-option" data-export="json"><span class="export-option-icon json">{ }</span><span><strong>Dữ liệu dự án</strong><small>Chương, ý chính, transcript và ghi chú (.json)</small></span><b>→</b></button></div>
+      <p class="report-export-status" id="reportExportStatus" role="status" aria-live="polite"></p>
+      <p class="report-local-copy">Tạo file trên máy này · Mốc thời gian mở lại dự án cục bộ.</p>
+      <button class="backup-export-link" id="openSubtitleImport">Nhập transcript SRT / VTT →</button>
+      <button class="backup-export-link" id="openHistoryFromExport">Lịch sử phiên bản transcript →</button>
+      <button class="backup-export-link" id="openBackupFromExport">Sao lưu toàn bộ dự án kèm âm thanh →</button>
+    </dialog>
+
+    <dialog class="modal wide-modal subtitle-modal" id="subtitleModal" aria-labelledby="subtitleTitle">
+      <div class="modal-header"><div><p class="card-kicker">GIỮ NGUYÊN MỐC THỜI GIAN</p><h2 id="subtitleTitle">Nhập transcript SRT / VTT.</h2></div><button class="modal-close" data-close-modal="subtitleModal" aria-label="Đóng">×</button></div>
+      <p class="modal-copy">Chọn file phụ đề đã có để đưa lời thoại vào dự án. Audio Toolkit sẽ giữ mốc thời gian, nhận diện tên người nói và tạo lại tóm tắt.</p>
+      <div class="subtitle-import-panel"><strong>Chọn file phụ đề</strong><p>Hỗ trợ .srt và .vtt, tối đa 25 MB, mã hoá UTF-8 hoặc UTF-16. Tên người nói có dạng “Tên: lời thoại” hoặc nhãn giọng WebVTT.</p><button class="button secondary" id="subtitleChooseButton">＋ Chọn SRT / VTT</button><input id="subtitleFileInput" type="file" accept=".srt,.vtt,text/plain,text/vtt" hidden /></div>
+      <p class="subtitle-status" id="subtitleStatus" role="status" aria-live="polite"></p>
+      <div class="subtitle-preview" id="subtitlePreview" hidden>
+        <span class="card-kicker">XEM TRƯỚC TRANSCRIPT</span>
+        <div class="subtitle-preview-heading"><strong id="subtitlePreviewFormat"></strong><span id="subtitlePreviewFile"></span></div>
+        <p><b>Khoảng thời gian:</b> <span id="subtitlePreviewRange"></span></p>
+        <p><b>Người nói:</b> <span id="subtitlePreviewSpeakers"></span></p>
+        <p class="subtitle-preview-warning" id="subtitlePreviewWarning"></p>
+        <div class="subtitle-preview-list" id="subtitlePreviewList"></div>
+      </div>
+      <div class="modal-footer"><button class="button secondary" id="subtitleCancelButton">Huỷ</button><button class="button primary" id="subtitleImportButton" hidden>Nhập transcript</button></div>
+    </dialog>
+
+    <dialog class="modal history-modal" id="historyModal" aria-labelledby="historyTitle">
+      <div class="modal-header"><div><p class="card-kicker">TRANSCRIPT & NGƯỜI NÓI</p><h2 id="historyTitle">Lịch sử phiên bản.</h2></div><button class="modal-close" data-close-modal="historyModal" aria-label="Đóng lịch sử">×</button></div>
+      <p class="history-project" id="historyProjectName"></p>
+      <p class="modal-copy">Tự lưu trước khi chạy lại AI, nhập phụ đề hoặc khôi phục. Bạn cũng có thể lưu một phiên bản bất cứ lúc nào.</p>
+      <div class="history-toolbar"><button class="button secondary" id="historySaveButton">＋ Lưu phiên bản hiện tại</button><button class="text-button" id="historyReloadButton">↻ Tải lại</button></div>
+      <p class="history-status" id="historyStatus" role="status" aria-live="polite"></p>
+      <div class="history-empty" id="historyEmpty"><span data-icon="clock"></span><strong>Chưa có phiên bản đã lưu</strong><p>Lưu bản hiện tại để có một điểm quay lại. Các lần thay đổi transcript tiếp theo sẽ được lưu tự động.</p></div>
+      <div class="history-layout" id="historyLayout" hidden>
+        <nav class="history-version-list" id="historyVersionList" aria-label="Các phiên bản đã lưu"></nav>
+        <section class="history-preview" id="historyPreview" aria-labelledby="historyPreviewTitle" hidden>
+          <span class="card-kicker">XEM TRƯỚC PHIÊN BẢN</span><h3 id="historyPreviewTitle"></h3><p class="history-date" id="historyPreviewDate"></p>
+          <p class="history-speakers"><b>Người nói:</b> <span id="historyPreviewSpeakers"></span></p>
+          <p class="history-comparison" id="historyComparison"></p>
+          <label class="sr-only" for="historySearch">Tìm trong phiên bản</label><input class="modal-input" id="historySearch" type="search" placeholder="Tìm nội dung hoặc người nói…" autocomplete="off" />
+          <div class="history-preview-list" id="historyPreviewList"></div>
+          <div class="history-pagination"><span id="historyPageState" aria-live="polite"></span><div><button id="historyPrevious" aria-label="Trang trước">←</button><button id="historyNext" aria-label="Trang sau">→</button></div></div>
+        </section>
+      </div>
+      <p class="history-restore-copy">Khôi phục sẽ thay transcript và người nói, giữ ghi chú và âm thanh hiện tại. Bản đang mở được lưu vào lịch sử để bạn có thể quay lại.</p>
+      <p class="history-retention">Giữ tối đa 20 phiên bản gần nhất trong 64 MB. Chỉnh sửa liên tiếp được gom trong 5 phút. Lịch sử lưu trên máy này.</p>
+      <div class="modal-footer"><button class="button secondary" id="historyCloseButton" data-close-modal="historyModal">Đóng</button><button class="button primary" id="historyRestoreButton" disabled>Khôi phục phiên bản</button></div>
+    </dialog>
+
+    <dialog class="modal wide-modal backup-modal" id="backupModal" aria-labelledby="backupTitle">
+      <div class="modal-header"><div><p class="card-kicker">GIỮ LẠI TOÀN BỘ CÔNG SỨC</p><h2 id="backupTitle">Sao lưu & khôi phục.</h2></div><button class="modal-close" data-close-modal="backupModal" aria-label="Đóng">×</button></div>
+      <p class="modal-copy">Mang dự án sang máy khác hoặc giữ một bản dự phòng. ZIP gồm âm thanh gốc, bản phát, bản đã lọc ồn nếu có và toàn bộ nội dung dự án.</p>
+      <div class="backup-create-panel"><span class="field-label">Dự án đang mở</span><strong id="backupCurrentProject"></strong><button class="button primary" id="backupCreateButton">↓ Sao lưu dự án</button><a class="backup-download" id="backupDownloadLink" href="#" download hidden>Tải ZIP sao lưu</a></div>
+      <div class="backup-import-panel"><strong>Khôi phục từ bản sao lưu</strong><p>Chọn file .audiokit.zip để kiểm tra và xem trước. Tối đa 1,5 GB.</p><button class="button secondary" id="backupChooseButton">＋ Chọn ZIP sao lưu</button><input id="backupFileInput" type="file" accept=".zip,application/zip" hidden /></div>
+      <p class="backup-status" id="backupStatus" role="status" aria-live="polite"></p>
+      <button class="batch-action danger" id="backupCancelButton" hidden>Huỷ thao tác</button>
+      <div class="backup-preview" id="backupPreview" hidden><span class="card-kicker">BẢN SAO LƯU ĐÃ KIỂM TRA</span><h3 id="backupProjectName"></h3><p id="backupPreviewMeta"></p><p id="backupPreviewCounts"></p><p id="backupPreviewDate"></p><p class="backup-conflict" id="backupConflict"></p><div class="backup-actions"><button class="button secondary" id="backupOpenExistingButton" hidden>Mở dự án hiện có</button><button class="button primary" id="backupRestoreButton">Khôi phục dự án</button></div></div>
+      <p class="report-local-copy">Dự án hiện có được giữ nguyên. File ZIP chứa toàn bộ bản thu và nội dung; hãy lưu ở nơi bạn tin cậy.</p>
+    </dialog>
+
+    <dialog class="modal wide-modal batch-modal" id="batchModal" aria-labelledby="batchTitle">
+      <div class="modal-header"><div><p class="card-kicker">XỬ LÝ HÀNG LOẠT</p><h2 id="batchTitle">Nhiều bản thu, một hàng đợi.</h2></div><button class="modal-close" data-close-modal="batchModal" aria-label="Đóng">×</button></div>
+      <p class="modal-copy">Các file được giữ trên máy này và xử lý lần lượt để không tranh tài nguyên. Bạn có thể huỷ hoặc thử lại từng file.</p>
+      <div class="batch-toolbar"><button class="button secondary" id="batchAddButton">＋ Thêm file</button><button class="text-button" id="batchSettingsButton">Tuỳ chỉnh xử lý</button><input type="file" id="batchFileInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.webm" multiple hidden /></div>
+      <p class="batch-options-summary" id="batchOptionsSummary"></p>
+      <div class="batch-summary" id="batchSummary" role="status" aria-live="polite"></div>
+      <p class="batch-persistence" id="batchPersistenceStatus" role="status">Đang kết nối hàng đợi đã lưu…</p>
+      <button class="batch-action" id="batchRecoverButton" hidden>Thử lưu lại hàng đợi</button>
+      <input type="file" id="batchResumeFileInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.webm" hidden />
+      <div class="batch-list" id="batchList"></div>
+      <div class="batch-export-panel">
+        <div class="batch-panel-heading"><strong>Xuất các bản đã hoàn tất</strong><span>Gom thành một ZIP</span></div>
+        <div class="batch-format-list" role="group" aria-label="Định dạng xuất hàng loạt">
+          <label><input type="checkbox" value="docx" data-batch-format checked /> DOCX</label>
+          <label><input type="checkbox" value="pdf" data-batch-format checked /> PDF</label>
+          <label><input type="checkbox" value="txt" data-batch-format checked /> TXT</label>
+          <label><input type="checkbox" value="json" data-batch-format checked /> JSON</label>
+          <label><input type="checkbox" value="srt" data-batch-format /> SRT</label>
+          <label><input type="checkbox" value="vtt" data-batch-format /> VTT</label>
+          <label class="batch-layout"><span>Mẫu báo cáo</span><select class="modal-input" id="batchReportLayout"><option value="podcast">Podcast</option><option value="lesson">Bài giảng</option><option value="interview">Phỏng vấn</option></select></label>
+        </div>
+        <p class="batch-export-status" id="batchExportStatus" role="status" aria-live="polite"></p>
+      </div>
+      <div class="modal-footer batch-footer"><button class="button secondary" id="batchClearButton">Xoá hàng đợi</button><button class="button secondary" id="batchExportButton" disabled>Xuất ZIP</button><button class="button primary" id="batchStartButton">Bắt đầu xử lý</button></div>
+      <p class="batch-footnote">Tải file xong có thể đóng tab. Máy chủ tiếp tục xử lý; nếu máy chủ dừng, lần mở sau sẽ tiếp tục từ bước chưa xong. Xoá hàng đợi giữ nguyên các dự án đã nhập.</p>
+    </dialog>
+
+    <dialog class="modal wide-modal clip-modal" id="clipModal" aria-labelledby="clipTitle">
+      <div class="modal-header"><div><p class="card-kicker">TỪ LỜI NÓI ĐẾN ĐOẠN HAY</p><h2 id="clipTitle">Cắt một khoảnh khắc.</h2></div><button class="modal-close" data-close-modal="clipModal" aria-label="Đóng trình cắt clip">×</button></div>
+      <p class="clip-source"><span id="clipProjectName"></span><span>Bản thu <b id="clipSourceDuration"></b></span></p>
+      <div class="clip-time-fields">
+        <label>Bắt đầu<input class="modal-input" id="clipStart" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-describedby="clipTimeHelp clipRangeError" /></label>
+        <span class="clip-time-arrow" aria-hidden="true">→</span>
+        <label>Kết thúc<input class="modal-input" id="clipEnd" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-describedby="clipTimeHelp clipRangeError" /></label>
+      </div>
+      <div class="clip-time-meta"><span id="clipTimeHelp">mm:ss.mmm · Ví dụ 00:12.500</span><strong id="clipDuration"></strong></div>
+      <p class="clip-error" id="clipRangeError" aria-live="polite"></p>
+      <div class="clip-excerpt"><span id="clipPassageCount"></span><p id="clipExcerpt"></p></div>
+      <div class="clip-options">
+        <label>Nguồn âm thanh<select class="modal-input" id="clipVariant"><option value="original">Bản gốc</option><option value="clean">Đã lọc ồn</option></select></label>
+        <label>Định dạng<select class="modal-input" id="clipFormat"><option value="mp3">MP3 · nhỏ gọn</option><option value="wav">WAV · PCM 16-bit</option></select></label>
+      </div>
+      <div class="clip-preview"><button id="clipPreviewButton">▷ Nghe thử đoạn cắt</button><span id="clipPreviewTime">00:00.000</span></div>
+      <audio id="clipAudioElement" preload="metadata"></audio>
+      <p class="clip-footnote">Giữ khoảng nghỉ và mọi giọng nói trong khoảng cắt. Clip tối thiểu 0,25 giây; nghe thử ở tốc độ 1×.</p>
+      <p class="clip-export-status" id="clipExportStatus" role="status"></p>
+      <div class="clip-ready" id="clipReady" hidden><a id="clipDownloadLink">Tải clip</a><span>Liên kết tải dùng được trong 30 phút. File đã tải được giữ trên máy của bạn.</span></div>
+      <div class="modal-footer"><button class="button secondary" id="clipCancelExport" hidden>Huỷ xuất</button><button class="button secondary" data-close-modal="clipModal">Quay lại</button><button class="button primary" id="clipExportButton">Xuất & tải clip</button></div>
+    </dialog>
+
+    <dialog class="modal speaker-modal" id="speakerModal">
+      <div class="modal-header"><div><p class="card-kicker">QUẢN LÝ NGƯỜI NÓI</p><h2>Thêm người nói</h2></div><button class="modal-close" data-close-modal="speakerModal" aria-label="Đóng">×</button></div>
+      <label class="field-label" for="speakerNameInput">Tên hiển thị</label><input class="modal-input" id="speakerNameInput" type="text" placeholder="Ví dụ: Khách mời" maxlength="40" />
+      <div class="modal-footer"><button class="button secondary" data-close-modal="speakerModal">Huỷ</button><button class="button primary" id="saveSpeakerButton">Thêm người nói</button></div>
+    </dialog>
+
+    <dialog class="modal wide-modal" id="libraryModal"><div class="modal-header"><div><p class="card-kicker">PODCAST LAB</p><h2 id="libraryTitle">Thư viện bản thu</h2></div><button class="modal-close" data-close-modal="libraryModal" aria-label="Đóng">×</button></div><div class="project-library" id="projectLibrary"></div></dialog>
+    <dialog class="modal" id="settingsModal"><div class="modal-header"><div><p class="card-kicker">XỬ LÝ CỤC BỘ</p><h2>Tuỳ chỉnh xử lý</h2></div><button class="modal-close" data-close-modal="settingsModal" aria-label="Đóng">×</button></div>
+      <label class="field-label" for="settingLanguage">Ngôn ngữ bản thu</label><select class="modal-input" id="settingLanguage"><option value="auto">Tự nhận diện</option><option value="vi">Tiếng Việt</option><option value="en">Tiếng Anh</option><option value="ja">Tiếng Nhật</option><option value="ko">Tiếng Hàn</option><option value="zh">Tiếng Trung</option><option value="fr">Tiếng Pháp</option><option value="de">Tiếng Đức</option><option value="es">Tiếng Tây Ban Nha</option></select>
+      <label class="field-label" for="settingModel">Chất lượng transcript</label><select class="modal-input" id="settingModel"><option value="tiny">Nhanh · tiny</option><option value="base">Cân bằng · base</option><option value="small">Chi tiết · small (đề xuất cho tiếng Việt)</option></select>
+      <label class="field-label" for="settingSpeakers">Số người nói</label><select class="modal-input" id="settingSpeakers"><option value="0">Tự ước lượng</option><option value="1">1 người</option><option value="2">2 người</option><option value="3">3 người</option><option value="4">4 người</option><option value="5">5 người</option><option value="6">6 người</option><option value="7">7 người</option><option value="8">8 người</option></select>
+      <label class="field-label" for="settingNoise">Mức giảm tiếng nền</label><select class="modal-input" id="settingNoise"><option value="gentle">Nhẹ · giữ chất giọng</option><option value="standard">Vừa · cân bằng</option><option value="strong">Mạnh · bản thu nhiều nhiễu</option></select>
+      <p class="modal-copy">Model được tải trong lần đầu. Tách người nói là ước lượng; đoạn nói chồng nhau hoặc quá ngắn có thể cần sửa. Chạy lại Transcript sẽ thay bản transcript hiện tại.</p><div class="modal-footer"><button class="button primary" id="saveSettingsButton">Lưu cài đặt</button></div>
+    </dialog>
+    <dialog class="modal" id="fileModal"><div class="modal-header"><div><p class="card-kicker">BẢN THU</p><h2>Thông tin dự án</h2></div><button class="modal-close" data-close-modal="fileModal" aria-label="Đóng">×</button></div><label class="field-label" for="projectNameInput">Tên dự án</label><input class="modal-input" id="projectNameInput" maxlength="150" /><div class="download-links"><a id="downloadOriginal" href="#">↓ Tải file gốc</a><a id="downloadClean" href="#" hidden>↓ Tải bản đã lọc ồn (MP3)</a></div><div class="modal-footer"><button class="button primary" id="renameProjectButton">Lưu tên</button></div></dialog>
+    <dialog class="modal" id="helpModal"><div class="modal-header"><div><p class="card-kicker">MỘT CHÚT TRỢ GIÚP</p><h2>Nghe, hiểu, ghi lại.</h2></div><button class="modal-close" data-close-modal="helpModal" aria-label="Đóng">×</button></div><div class="help-content"><p><b>1.</b> Nhập bản thu hoặc kéo thả file vào workspace.</p><p><b>2.</b> Chọn Tuỳ chỉnh để đặt ngôn ngữ và số người nói, rồi chạy xử lý.</p><p><b>3.</b> Nhấn timestamp để tua, gõ ghi chú rồi nhấn Enter để lưu.</p><p><b>Space</b> Phát / dừng · <b>← →</b> Tua 5 giây · <b>Shift + ← →</b> Tua 15 giây.</p><p>Transcript và ghi chú của bản thu được lưu trên máy chủ cục bộ. Mẫu minh hoạ được lưu trong trình duyệt. JSON chỉ chứa nội dung và mốc thời gian, không chứa âm thanh.</p></div></dialog>
+    <dialog class="modal" id="templatesModal"><div class="modal-header"><div><p class="card-kicker">BẮT Ý NHANH HƠN</p><h2>Mẫu ghi chú</h2></div><button class="modal-close" data-close-modal="templatesModal" aria-label="Đóng">×</button></div><p class="modal-copy">Chọn một nhãn cho các ghi chú tiếp theo.</p><div class="export-options"><button class="export-option" data-template="Ý chính"><span class="export-option-icon">✦</span><span><strong>Ý chính</strong><small>Điều quan trọng cần nhớ từ bài giảng.</small></span><b>→</b></button><button class="export-option" data-template="Trích dẫn"><span class="export-option-icon">“ ”</span><span><strong>Trích dẫn</strong><small>Câu nói để dùng trong podcast hoặc bài viết.</small></span><b>→</b></button><button class="export-option" data-template="Việc cần làm"><span class="export-option-icon">✓</span><span><strong>Việc cần làm</strong><small>Biến cuộc phỏng vấn thành hành động.</small></span><b>→</b></button><button class="export-option" data-template=""><span class="export-option-icon">—</span><span><strong>Ghi chú tự do</strong><small>Không thêm nhãn.</small></span><b>→</b></button></div></dialog>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
